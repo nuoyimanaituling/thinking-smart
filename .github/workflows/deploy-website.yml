@@ -2,7 +2,7 @@ name: Deploy Website
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   workflow_dispatch: # Manual trigger from GitHub UI
 
 # Cancel in-flight deploys when a new push arrives
