@@ -1,135 +1,110 @@
-# Claude Code Skill Marketplace
+# Thinking Smart
 
-This repository is a standalone Claude Code plugin marketplace containing nuoyimanaituling skills collection.
+> *Craft with Intention* — Thoughtful skills for AI-driven development
 
-## Quick start
+[![Deploy Website](https://github.com/nuoyimanaituling/thinking-smart/actions/workflows/deploy-website.yml/badge.svg)](https://github.com/nuoyimanaituling/thinking-smart/actions/workflows/deploy-website.yml)
 
-From inside Claude Code:
+**Thinking Smart** is a Claude Code plugin that scales your AI-driven workflows with structured planning, parallel execution, error recovery, and plan auditing. It transforms how Claude Code approaches complex tasks — from ad-hoc problem solving to intentional, reviewable engineering.
 
-1. Add this marketplace (local dev):
+**Website**: [nuoyimanaituling.github.io/thinking-smart](https://nuoyimanaituling.github.io/thinking-smart/)
+
+![Plugin Detail Page](docs/plugin-detail.png)
+
+## Quick Start
+
+Install in Claude Code with two commands:
 
 ```bash
-/plugin marketplace add ./
-```
-
-If you host on GitHub later:
-
-```bash
+# 1. Add the marketplace
 /plugin marketplace add nuoyimanaituling/thinking-smart
-```
 
-2. Install plugins:
-
-```bash
+# 2. Install the plugin
 /plugin install thinking-smart@thinking-smart
 ```
 
-3. Run a skill:
+## Skills
 
-```bash
-# thinking-smart plugin skills
-/thinking-smart:brainstorming
-/thinking-smart:write-plan
-/thinking-smart:execute-plan
-/thinking-smart:recover-from-errors
-```
+| Skill | Command | Description |
+|-------|---------|-------------|
+| **Brainstorming** | `/thinking-smart:brainstorming` | Explore user intent, requirements, and design before implementation. Emphasizes web search to verify ground truth and resolve conflicts by recency. |
+| **Write Plan** | `/thinking-smart:write-plan` | Create structured plan files with diagrams, before/after comparisons, and clear acceptance criteria — not walls of text. |
+| **Execute Plan** | `/thinking-smart:execute-plan` | Execute a plan file step by step, spawning parallel subagents for independent tasks to maximize throughput. |
+| **Audit Plan** | `/thinking-smart:audit-plan` | Verify planned tasks against actual implementation with evidence-based status: Done, Partial, or Missing. |
+| **Recover from Errors** | `/thinking-smart:recover-from-errors` | When tools fail, re-align with the plan file instead of guessing — preventing cascading errors and goal drift. |
+| **Using Skills** | `/thinking-smart:using-skills` | Skill discovery and invocation rules for Claude Code conversations. |
 
-## Available Plugins
+## Design Philosophy
 
-### thinking-smart
+The plugin is built around five core principles that enhance Claude Code's capabilities through hooks and structured workflows:
 
-Development workflow skills for planning and execution.
+![Design Philosophy Diagram](docs/design-philosophy.png)
 
-| Skill                 | Description                                                        |
-| --------------------- | ------------------------------------------------------------------ |
-| `brainstorming`       | Explore user intent, requirements and design before implementation |
-| `write-plan`          | Create and update plan files with structured templates             |
-| `execute-plan`        | Execute a plan file step by step                                   |
-| `recover-from-errors` | Recover from errors during execution                               |
+- **Ground Truth First** — Web search during exploration to verify facts against authoritative sources, not just local code.
+- **Clear Plan** — Plans use diagrams and structured templates instead of freeform text, making them easy to review at a glance.
+- **Parallelism** — Independent tasks are automatically spawned as parallel subagents, maximizing concurrent execution.
+- **Plan Audit** — After execution, every task is verified against the plan with evidence-based status reporting.
+- **Error Recovery** — On tool failure, the agent consults the plan file and recovers on course, instead of guessing and drifting.
 
-## Repo layout
-
-```text
-.claude-plugin/marketplace.json
-claude/thinking-smart/.claude-plugin/plugin.json
-claude/<plugin-name>/skills/<skill-name>/SKILL.md
-```
-
-Notes:
-
-- Only `plugin.json` lives inside `.claude-plugin/`. All other folders stay at the plugin root.
-- Skills are namespaced as `/<plugin-name>:<skill-name>`.
-
-## Add a new skill
-
-1. Create a new skill directory:
-
-```bash
-mkdir -p claude/<plugin-name>/skills/<skill-name>
-```
-
-2. Create the skill definition:
+## Repo Layout
 
 ```text
-claude/<plugin-name>/skills/<skill-name>/SKILL.md
+.claude-plugin/marketplace.json          # Marketplace registry
+claude/thinking-smart/
+  .claude-plugin/plugin.json             # Plugin metadata (v1.0.x)
+  skills/
+    brainstorming/SKILL.md
+    write-plan/SKILL.md
+    execute-plan/SKILL.md
+    audit-plan/SKILL.md
+    recover-from-errors/SKILL.md
+    using-skills/SKILL.md
+  hooks/                                 # Claude Code event hooks
+  website.*.toml                         # Website content config
+website/                                 # Astro static site
+  src/
+  public/images/philosophies/            # Generated illustration images
+  scripts/                               # Content & image generation scripts
 ```
 
-Frontmatter should include at least `name` and `description`. You can add `disable-model-invocation: true` to make it manual-only.
-
-3. Test locally:
-
-```bash
-claude --plugin-dir ./claude/<plugin-name>
-```
-
-## Distribution tips
-
-- Relative plugin sources work when the marketplace is added via Git (local path or repo).
-- If you distribute via a direct URL to `marketplace.json`, use Git or GitHub sources instead of relative paths.
-- Plugins are copied to a cache on install, so do not reference files outside the plugin directory.
-
-## Development setup
-
-After cloning, run the setup script to enable automatic plugin version bumping:
-
-```bash
-sh scripts/setup.sh
-```
-
-This configures Git to use tracked hooks from `.githooks/`. When you commit changes to any plugin under `claude/`, the patch version in its `plugin.json` is automatically incremented. To set major or minor versions manually, edit `plugin.json` and stage it before committing — the hook respects manually staged version changes.
-
-## Website
-
-The `website/` directory contains a static site that showcases the skills with LLM-generated explanations.
+## Development
 
 ### Setup
 
 ```bash
+# Clone and configure Git hooks for automatic version bumping
+git clone https://github.com/nuoyimanaituling/thinking-smart.git
+cd thinking-smart
+sh scripts/setup.sh
+```
+
+### Add a New Skill
+
+1. Create the skill directory and definition:
+   ```bash
+   mkdir -p claude/thinking-smart/skills/<skill-name>
+   # Create claude/thinking-smart/skills/<skill-name>/SKILL.md
+   ```
+
+2. Test locally:
+   ```bash
+   claude --plugin-dir ./claude/thinking-smart
+   ```
+
+Skills are namespaced as `/<plugin-name>:<skill-name>`.
+
+### Website
+
+The `website/` directory contains an Astro static site showcasing the plugin.
+
+```bash
 cd website
 npm install
+npm run dev        # Local dev server
+npm run build      # Build to dist/
 ```
 
-### Generate skill content
+Pushes to `master` automatically deploy via GitHub Actions to GitHub Pages.
 
-Requires `DEEPSEEK_API_KEY` environment variable:
+## License
 
-```bash
-export DEEPSEEK_API_KEY=your-api-key
-npm run generate
-```
-
-This reads each `SKILL.md` and generates user-friendly descriptions with workflow diagrams. Generated content is cached in `src/content/generated/` - only regenerated when source changes.
-
-### Development
-
-```bash
-npm run dev
-```
-
-### Build
-
-```bash
-npm run build
-```
-
-Output goes to `website/dist/`.
+Made with intention by [nuoyimanaituling](https://github.com/nuoyimanaituling).
