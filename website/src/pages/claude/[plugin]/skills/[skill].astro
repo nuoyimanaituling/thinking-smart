@@ -1,0 +1,514 @@
+---
+import Base from "../../../../layouts/Base.astro";
+import Breadcrumb from "../../../../components/Breadcrumb.astro";
+import WorkflowStep from "../../../../components/WorkflowStep.astro";
+import { readdirSync, readFileSync, existsSync } from "fs";
+import { join } from "path";
+
+interface PluginData {
+  sourceHash: string;
+  generatedAt: string;
+  plugin: {
+    name: string;
+    displayName: string;
+    tagline: string;
+    skillCount: number;
+    skills: string[];
+    marketplaceCommand: string;
+    installCommand: string;
+  };
+}
+
+interface SkillData {
+  sourceHash: string;
+  generatedAt: string;
+  skill: {
+    name: string;
+    displayName: string;
+    pluginName: string;
+    tagline: string;
+    shortSummary: string;
+    fullSummary: string;
+    highlights: Array<{ title: string; description: string }>;
+    workflow: {
+      steps: Array<{ name: string; description: string; details?: string }>;
+    };
+  };
+}
+
+export function getStaticPaths() {
+  const pluginsDir = join(process.cwd(), "src/content/generated/plugins");
+  const skillsDir = join(process.cwd(), "src/content/generated/skills");
+
+  if (!existsSync(pluginsDir) || !existsSync(skillsDir)) return [];
+
+  const paths: Array<{
+    params: { plugin: string; skill: string };
+    props: { skillData: SkillData; pluginData: PluginData };
+  }> = [];
+
+  const pluginFiles = readdirSync(pluginsDir).filter((f) => f.endsWith(".json"));
+
+  for (const pluginFile of pluginFiles) {
+    const pluginContent = readFileSync(join(pluginsDir, pluginFile), "utf-8");
+    const pluginData = JSON.parse(pluginContent) as PluginData;
+
+    for (const skillName of pluginData.plugin.skills) {
+      const skillPath = join(skillsDir, `${skillName}.json`);
+      if (!existsSync(skillPath)) continue;
+
+      const skillContent = readFileSync(skillPath, "utf-8");
+      const skillData = JSON.parse(skillContent) as SkillData;
+
+      paths.push({
+        params: {
+          plugin: pluginData.plugin.name,
+          skill: skillData.skill.name,
+        },
+        props: { skillData, pluginData },
+      });
+    }
+  }
+
+  return paths;
+}
+
+interface Props {
+  skillData: SkillData;
+  pluginData: PluginData;
+}
+
+const { skillData, pluginData } = Astro.props;
+const { skill } = skillData;
+const { plugin } = pluginData;
+
+const breadcrumbItems = [
+  { label: "Home", href: "/" },
+  { label: plugin.displayName, href: `/claude/${plugin.name}` },
+  { label: skill.displayName },
+];
+
+const skillCommand = `/${plugin.name}:${skill.name}`;
+const accentColors = ["accent", "secondary"];
+---
+
+<Base title={skill.displayName} description={skill.tagline} showHeader={false}>
+  <!-- Breadcrumb -->
+  <div class="container">
+    <Breadcrumb items={breadcrumbItems} />
+  </div>
+
+  <!-- Hero: side-by-side layout -->
+  <div class="container-wide">
+    <section class="skill-hero">
+      <div class="hero-left">
+        <!-- Identity -->
+        <p class="skill-eyebrow">Skill</p>
+        <h1 class="skill-title">{skill.displayName}</h1>
+        <p class="skill-tagline">{skill.tagline}</p>
+
+        <!-- Usage -->
+        <div class="usage-section">
+          <div class="usage-label">Use in Claude Code</div>
+          <div class="command-box">
+            <code>{skillCommand}</code>
+            <button class="copy-btn" data-command={skillCommand} aria-label="Copy skill command">
+              <svg class="copy-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              <svg class="check-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Full summary -->
+        <div class="summary-block">
+          <p>{skill.fullSummary}</p>
+        </div>
+      </div>
+
+      <div class="hero-right">
+        {skill.highlights && skill.highlights.length > 0 && (
+          <>
+            <div class="insights-label">Key Insights</div>
+            <div class="insights-stack">
+              {skill.highlights.map((highlight, index) => {
+                const color = accentColors[index % accentColors.length];
+                return (
+                  <article
+                    class="insight-card"
+                    style={`--insight-color: var(--color-${color}); --insight-color-soft: var(--color-${color}-soft); --delay: ${index * 80}ms`}
+                  >
+                    <div class="insight-marker" />
+                    <div class="insight-body">
+                      <h3 class="insight-title">{highlight.title}</h3>
+                      <p class="insight-desc">{highlight.description}</p>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </div>
+    </section>
+  </div>
+
+  <!-- Workflow section -->
+  <div class="container">
+    {skill.workflow && skill.workflow.steps && skill.workflow.steps.length > 0 && (
+      <section class="workflow-section">
+        <header class="section-title">
+          <span class="section-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+          </span>
+          <h2>How It Works</h2>
+        </header>
+
+        <div class="workflow-steps">
+          {skill.workflow.steps.map((step, index) => (
+            <WorkflowStep
+              stepNumber={index + 1}
+              name={step.name}
+              description={step.description}
+              details={step.details}
+              isLast={index === skill.workflow.steps.length - 1}
+            />
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- Footer -->
+    <footer class="page-footer">
+      <span>Content generated {new Date(skillData.generatedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</span>
+    </footer>
+  </div>
+</Base>
+
+<script>
+  document.querySelectorAll(".copy-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const command = btn.getAttribute("data-command");
+      if (command) {
+        navigator.clipboard.writeText(command);
+        btn.classList.add("copied");
+        setTimeout(() => btn.classList.remove("copied"), 1500);
+      }
+    });
+  });
+</script>
+
+<style>
+  /* ================================================================
+     Hero — side-by-side
+     ================================================================ */
+  .skill-hero {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-16);
+    align-items: start;
+    padding: var(--space-12) 0 var(--space-16);
+    border-bottom: 1px solid var(--color-border-subtle);
+    margin-bottom: var(--space-16);
+  }
+
+  /* ---- Left column ---- */
+  .hero-left {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .skill-eyebrow {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: var(--color-accent);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wider);
+    margin-bottom: var(--space-3);
+  }
+
+  .skill-title {
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    font-weight: 600;
+    color: var(--color-text);
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    margin-bottom: var(--space-4);
+  }
+
+  .skill-tagline {
+    font-size: var(--text-xl);
+    color: var(--color-text-muted);
+    line-height: var(--leading-relaxed);
+    max-width: 520px;
+    margin-bottom: var(--space-8);
+  }
+
+  /* Usage */
+  .usage-section {
+    margin-bottom: var(--space-8);
+  }
+
+  .usage-label {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wider);
+    margin-bottom: var(--space-2);
+  }
+
+  .command-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: var(--color-earth-100);
+    padding: var(--space-3) var(--space-4);
+    padding-right: calc(var(--space-4) + 36px);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border-subtle);
+    max-width: 400px;
+  }
+
+  .command-box code {
+    flex: 1;
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--color-text);
+    background: none;
+    border: none;
+    padding: 0;
+    white-space: nowrap;
+  }
+
+  .copy-btn {
+    position: absolute;
+    right: var(--space-2);
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: var(--color-accent);
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    color: white;
+    transition: background var(--transition-fast);
+  }
+
+  .copy-btn:hover {
+    background: var(--color-accent-hover);
+  }
+
+  .copy-btn .copy-icon,
+  .copy-btn .check-icon {
+    position: absolute;
+    transition: opacity var(--transition-fast);
+  }
+
+  .copy-btn .check-icon {
+    opacity: 0;
+  }
+
+  .copy-btn.copied .copy-icon {
+    opacity: 0;
+  }
+
+  .copy-btn.copied .check-icon {
+    opacity: 1;
+  }
+
+  /* Summary */
+  .summary-block {
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--color-border-subtle);
+  }
+
+  .summary-block p {
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+    color: var(--color-text-secondary);
+    max-width: 520px;
+  }
+
+  /* ---- Right column: Key Insights ---- */
+  .hero-right {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .insights-label {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wider);
+    margin-bottom: var(--space-4);
+  }
+
+  .insights-stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .insight-card {
+    display: flex;
+    gap: var(--space-4);
+    padding: var(--space-5);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    transition: all var(--transition-base);
+    animation: fadeIn 0.4s ease forwards;
+    animation-delay: var(--delay);
+    opacity: 0;
+  }
+
+  @keyframes fadeIn {
+    to {
+      opacity: 1;
+    }
+  }
+
+  .insight-card:hover {
+    border-color: var(--insight-color);
+    box-shadow: var(--shadow-md);
+  }
+
+  .insight-marker {
+    flex-shrink: 0;
+    width: 4px;
+    border-radius: var(--radius-full);
+    background: var(--insight-color);
+    min-height: 100%;
+  }
+
+  .insight-body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .insight-title {
+    font-family: var(--font-display);
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: var(--space-1);
+    line-height: var(--leading-snug);
+  }
+
+  .insight-desc {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    line-height: var(--leading-relaxed);
+  }
+
+  /* ================================================================
+     Workflow
+     ================================================================ */
+  .workflow-section {
+    margin-bottom: var(--space-12);
+  }
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-6);
+  }
+
+  .section-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--color-accent-soft);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-accent);
+  }
+
+  .section-title h2 {
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    font-weight: 600;
+    color: var(--color-text);
+  }
+
+  .workflow-steps {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ================================================================
+     Footer
+     ================================================================ */
+  .page-footer {
+    text-align: center;
+    padding: var(--space-8) 0;
+    border-top: 1px solid var(--color-border);
+    color: var(--color-text-light);
+    font-size: var(--text-xs);
+  }
+
+  /* ================================================================
+     Desktop — larger hero spacing
+     ================================================================ */
+  @media (min-width: 901px) {
+    .skill-hero {
+      padding: var(--space-16) 0 var(--space-20);
+    }
+  }
+
+  /* ================================================================
+     Responsive
+     ================================================================ */
+  @media (max-width: 900px) {
+    .skill-hero {
+      grid-template-columns: 1fr;
+      gap: var(--space-10);
+    }
+
+    .hero-right {
+      padding-top: 0;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .skill-hero {
+      padding: var(--space-6) 0 var(--space-8);
+    }
+
+    .skill-title {
+      font-size: var(--text-3xl);
+    }
+
+    .skill-tagline {
+      font-size: var(--text-lg);
+      margin-bottom: var(--space-6);
+    }
+
+    .command-box {
+      max-width: 100%;
+    }
+
+    .command-box code {
+      font-size: var(--text-xs);
+      white-space: normal;
+      word-break: break-all;
+    }
+  }
+</style>

@@ -1,0 +1,21 @@
+{
+  "sourceHash": "2ca93c4812c2d00f",
+  "generatedAt": "2026-02-28T14:57:49.019Z",
+  "plugin": {
+    "name": "thinking-smart",
+    "displayName": "Thinking Smart",
+    "tagline": "Scale your AI-driven workflows.",
+    "repo": "nuoyimanaitulingi/thinking-smart",
+    "skillCount": 6,
+    "skills": [
+      "audit-plan",
+      "brainstorming",
+      "execute-plan",
+      "recover-from-errors",
+      "using-skills",
+      "write-plan"
+    ],
+    "marketplaceCommand": "/plugin marketplace add nuoyimanaituling/skills",
+    "installCommand": "/plugin install thinking-smart@thinking-smart"
+  }
+}

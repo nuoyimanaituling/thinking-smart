@@ -1,0 +1,6 @@
+# Thinking Smart - Plugin Configuration
+# This file configures the plugin detail page content
+
+display_name = "Thinking Smart"
+tagline = "Scale your AI-driven workflows."
+repo = "nuoyimanaituling/thinking-smart"

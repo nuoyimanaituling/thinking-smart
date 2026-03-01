@@ -1,0 +1,13 @@
+{
+  "name": "thinking-smart",
+  "owner": {
+    "name": "nuoyimanaituling"
+  },
+  "plugins": [
+    {
+      "name": "thinking-smart",
+      "source": "./claude/thinking-smart",
+      "description": "nuoyimanaituling's Claude Code skills: brainstorming, planning, execution, error recovery"
+    }
+  ]
+}

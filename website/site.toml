@@ -1,0 +1,13 @@
+# Site Configuration
+# Edit this file to customize site-wide content
+
+[site]
+name = "Thinking Smart"
+description = "Claude Code skills by nuoyimanaituling"
+
+[hero]
+slogan = "Craft with Intention"
+subtitle = "Thoughtful skills for AI-driven development"
+
+[footer]
+copyright = "nuoyimanaituling"
