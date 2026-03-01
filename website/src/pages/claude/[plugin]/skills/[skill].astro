@@ -83,8 +83,8 @@ const { skill } = skillData;
 const { plugin } = pluginData;
 
 const breadcrumbItems = [
-  { label: "Home", href: "/" },
-  { label: plugin.displayName, href: `/claude/${plugin.name}` },
+  { label: "Home", href: `${import.meta.env.BASE_URL}/` },
+  { label: plugin.displayName, href: `${import.meta.env.BASE_URL}/claude/${plugin.name}` },
   { label: skill.displayName },
 ];
 

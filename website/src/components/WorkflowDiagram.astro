@@ -57,6 +57,22 @@ interface Props {
 
 const { diagramData } = Astro.props;
 const { diagram, philosophies } = diagramData;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+// Prefix image paths with base URL
+philosophies.forEach((phil) => {
+  if (phil.highlight.image) {
+    phil.highlight.image = base + phil.highlight.image;
+  }
+  if (phil.highlight.comparison) {
+    if (phil.highlight.comparison.before_image) {
+      phil.highlight.comparison.before_image = base + phil.highlight.comparison.before_image;
+    }
+    if (phil.highlight.comparison.after_image) {
+      phil.highlight.comparison.after_image = base + phil.highlight.comparison.after_image;
+    }
+  }
+});
 
 // First philosophy is the default
 const defaultId = philosophies.length > 0 ? philosophies[0].id : "";
@@ -194,7 +210,7 @@ function getEdgeColor(edge: string): { main: string; soft: string } {
               <div class="related-skills">
                 <span class="related-skills-label">Related Skills</span>
                 {phil.relatedSkills.map((skill) => (
-                  <a class="skill-tag" href={`/claude/thinking-smart/skills/${skill}/`}>
+                  <a class="skill-tag" href={`${import.meta.env.BASE_URL}/claude/thinking-smart/skills/${skill}/`}>
                     {skill}
                   </a>
                 ))}
@@ -250,7 +266,7 @@ function getEdgeColor(edge: string): { main: string; soft: string } {
           <div class="related-skills">
             <span class="related-skills-label">Related Skills</span>
             {phil.relatedSkills.map((skill) => (
-              <a class="skill-tag" href={`/claude/thinking-smart/skills/${skill}/`}>
+              <a class="skill-tag" href={`${import.meta.env.BASE_URL}/claude/thinking-smart/skills/${skill}/`}>
                 {skill}
               </a>
             ))}
